@@ -1,0 +1,49 @@
+version: '3.2'
+
+services:
+
+  backend:
+    build: backend
+    ports:
+      - 80:80
+    volumes:
+      # Re-use local composer cache via host-volume
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+      # Mount source-code for development
+      - ./:/app
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=verysecret
+      - MYSQL_DATABASE=bookshare
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=user123
+    volumes:
+      - ./common/docker/mysql/db:/var/lib/mysql
+      - ./common/docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - 3306:3306
+
+  #pgsql:
+  #  image: postgres:9.5
+  #  environment:
+  #    - POSTGRES_DB=yii2advanced
+  #    - POSTGRES_USER=yii2advanced
+  #    - POSTGRES_PASSWORD=secret
+
+  composer:
+    image: composer
+    volumes:
+      - .:/app
+    command: install
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 82:80
+    environment:
+      - PMA_ARBITRARY=1
+    volumes:
+      - ./common/docker/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
